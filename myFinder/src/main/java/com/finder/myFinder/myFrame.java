@@ -56,6 +56,8 @@ public class myFrame extends JFrame{
 	private List<Double> coords = new ArrayList();
 	private double latCord;
 	private double longCord;
+	private ArrayList<Double> latCordsList = new ArrayList();
+	private ArrayList<Double> longCordsList = new ArrayList();
 	
 	public static final int FRAME_WIDTH = 800;
 	public static final int FRAME_HEIGHT = 900;
@@ -352,6 +354,18 @@ public class myFrame extends JFrame{
 				}
 				d.add("\n");
 				data.add(d);
+			}
+			
+			for(int i = 0; i<sheet.getRows(); i++)
+			{
+				Cell cell = sheet.getCell(6,i);
+				String currentPost = cell.getContents();
+				searcherMain sM = new searcherMain();
+				sM.setPostcodeData(currentPost);
+				ArrayList<Double> latCordsList = new ArrayList();
+				ArrayList<Double> longCordsList = new ArrayList();
+				latCordsList.add(sM.getLat());
+				longCordsList.add(sM.getLong());
 			}
 		}
 		//--- exception ---
