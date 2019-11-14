@@ -12,9 +12,9 @@ import org.json.*;
 public class searcherMain {
 	
 	//--- global variables ---
-	private static String postcode;
-	private static double longCord;
-	private static double latCord;
+	private String postcode;
+	private double longCord;
+	private double latCord;
 	
 	//--- getting Postcode Data using API ---
 	public void setPostcodeData(String givenPostcode) throws IOException, MalformedURLException
@@ -24,6 +24,7 @@ public class searcherMain {
 		
 		String newURL = ("http://sharedweb.cs.bangor.ac.uk/postcodeapi/?postcode=" + givenPostcode);
 		try {
+			//String newURL = ("http://sharedweb.cs.bangor.ac.uk/postcodeapi/?postcode=" + givenPostcode);
             //--- new URL connection to read data ---
             URL url = new URL(newURL);
             URLConnection urlConnection = url.openConnection();
@@ -54,14 +55,19 @@ public class searcherMain {
             System.out.println("Malformed URL: " + e.getMessage());
         }
         catch (IOException e) {
-            System.out.println("I/O Error: " + e.getMessage());
+            System.out.println("I/O Error: " + e.getMessage() + " In searcherMain");
         }
+		catch(Exception e)
+		{
+			System.out.println(e);
+			System.exit(0);
+		}
 
 	}
 	
 	
 	//--- turns String into URL searchable string ---
-	private static String replaceSpaces(String str) 
+	private  String replaceSpaces(String str) 
     {     
         // Trim the given string 
         str = str.trim(); 
@@ -82,5 +88,6 @@ public class searcherMain {
 	public double getLat() {
 		return latCord;
 	}
+	
  
 }

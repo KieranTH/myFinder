@@ -5,6 +5,13 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.text.PlainDocument;
+
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellType;
+
 import javax.swing.text.*;
 import javax.swing.table.*;
 import java.io.*;
@@ -44,6 +51,7 @@ public class myFrame extends JFrame{
 	private JRadioButton metricKM;
 	private JRadioButton metricMILES;
 	private HaversineDistance hD = new HaversineDistance();
+	private searcherMain sM = new searcherMain();
 	
 	//--- inner components ---
 	private JLabel postCodeLabel;
@@ -56,13 +64,21 @@ public class myFrame extends JFrame{
 	private List<Double> coords = new ArrayList();
 	private double latCord;
 	private double longCord;
+	private ArrayList<String> postcodes = new ArrayList();
 	private ArrayList<Double> latCordsList = new ArrayList();
 	private ArrayList<Double> longCordsList = new ArrayList();
+	private ArrayList<Double> cordsDistance = new ArrayList();
+	
+	
+	//----
+	private Workbook workbook;
+	private Sheet sheet;
+	private File file;
 	
 	public static final int FRAME_WIDTH = 800;
 	public static final int FRAME_HEIGHT = 900;
 	
-	private int sheet;
+	//private int sheet;
 	
 	public myFrame() {
 		
@@ -139,8 +155,7 @@ public class myFrame extends JFrame{
 				userGivenPostcode = searchField.getText();
 				try {
 					//--- using API to get lat and long of given input ---
-					searcherMain sM = new searcherMain();
-					sM.setPostcodeData(userGivenPostcode);
+					sM.setPostcodeData(userGivenPostcode); //--- wont work off campus ---
 					latCord = sM.getLat();
 					longCord = sM.getLong();
 					
@@ -163,6 +178,10 @@ public class myFrame extends JFrame{
 					System.out.println(event);
 				}
 				catch(IOException event)
+				{
+					System.out.println(event);
+				}
+				catch(Exception event)
 				{
 					System.out.println(event);
 				}
@@ -336,8 +355,8 @@ public class myFrame extends JFrame{
 		File file = new File("epraccur.xls");
 		try {
 			//--- getting data from sheet ---
-			Workbook workbook = Workbook.getWorkbook(file);
-			Sheet sheet = workbook.getSheet(0);
+			workbook = Workbook.getWorkbook(file);
+			sheet = workbook.getSheet(0);
 			headers.clear();
 			///--- setting headers into JTable from Sheet ---
 			for (int i = 0; i < sheet.getColumns(); i++) {
@@ -356,14 +375,18 @@ public class myFrame extends JFrame{
 				data.add(d);
 			}
 			
-			for(int i = 0; i<sheet.getRows(); i++)
+			for(int i = 1; i<sheet.getRows(); i++)
+			{	
+				Cell cell = sheet.getCell(5,i);
+				postcodes.add(cell.getContents());
+			}
+			
+			for(int i = 0; i<postcodes.size();i++)
 			{
-				Cell cell = sheet.getCell(6,i);
-				String currentPost = cell.getContents();
-				searcherMain sM = new searcherMain();
-				sM.setPostcodeData(currentPost);
-				ArrayList<Double> latCordsList = new ArrayList();
-				ArrayList<Double> longCordsList = new ArrayList();
+				System.out.println(postcodes.get(i));
+				
+				String currentPostCode = postcodes.get(i);
+				//sM.setPostcodeData(currentPostCode); ---  wont work off campus ---
 				latCordsList.add(sM.getLat());
 				longCordsList.add(sM.getLong());
 			}
@@ -416,6 +439,77 @@ public class myFrame extends JFrame{
 	            width=300;
 	        columnModel.getColumn(column).setPreferredWidth(width);
 	    }
+	}
+	
+	//--- method for comparing distances ---
+	public void compareDistances() {
+		
+		//--- user given data ---
+		System.out.println(longCord);
+		System.out.println(latCord);
+		for(int i = 0; i<postcodes.size();i++)
+		{
+			//--- calculating distance of 2 postcodes given by user --- | using array, can be changed
+			hD.calculateDistance(latCord,longCord, latCordsList.get(i), longCordsList.get(i));
+			cordsDistance.add(hD.getDistance());
+			//double resultDistance = hD.getDistance();
+		}
+		
+		fillData(cordsDistance, 9);
+		
+		
+		///--- distance dialog box  ---
+		//String distance = "Distance: " + resultDistance;
+		
+	}
+	
+	
+	public void fillData(ArrayList array, int start)
+	{
+		try {
+			int startCell = start;     // Corresponds to Starting Column
+			HSSFWorkbook workbook = null;
+			HSSFSheet sheet = null;
+			HSSFCell cell = null;
+			HSSFRow sheetRow = null;
+			InputStream excelFile = new FileInputStream(file);
+
+	    
+	    
+			workbook = new HSSFWorkbook(excelFile);
+			sheet = workbook.getSheetAt(0);
+			sheetRow = getRow(sheet, 1);
+			for (int i = 0; i< array.size();i++)
+			{
+				cell = sheetRow.createCell(startCell);
+				//cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+				cell.setCellType(CellType.NUMERIC);
+				cell.setCellValue(((Integer) array.get(i)).doubleValue());
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e);
+		}
+	    
+	}
+
+	/**
+	 * Helper method to retrieve the numbered row. If row does not exists then
+	 * a new row is inserted and it's reference is returned.
+	 * @param sheet The worksheet from which a row reference is sought.
+	 * @param rowNum the row number
+	 * @return the reference to the numbered row.
+	 */
+	protected final HSSFRow getRow(HSSFSheet sheet, int rowNum)
+	{
+	    HSSFRow sheetRow = null ;
+
+	    sheetRow = sheet.getRow(rowNum);
+	    if (null == sheetRow)
+	        sheetRow = sheet.createRow(rowNum);
+
+	    return sheetRow;
 	}
 }
 	    
