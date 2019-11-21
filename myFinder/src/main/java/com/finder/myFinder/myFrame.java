@@ -154,36 +154,32 @@ public class myFrame extends JFrame{
 				//--- getting user input ---
 				userGivenPostcode = searchField.getText();
 				try {
-					//--- using API to get lat and long of given input ---
+				//--- using API to get lat and long of given input ---
+					searcherMain sM = new searcherMain();
 					sM.setPostcodeData(userGivenPostcode); //--- wont work off campus ---
 					latCord = sM.getLat();
 					longCord = sM.getLong();
 					
 					//--- debugging ---
-					System.out.println(latCord);
-					System.out.println(longCord);
+					//System.out.println(latCord);
+					//System.out.println(longCord);
 					
 					//--- adding new cords to array ---
 					coords.add(latCord);
 					coords.add(longCord);
 					
 					//--- debugging ---
-					System.out.println(coords);
+					//System.out.println(coords);
+					
+					//----
+					//compareDistances();
 					
 					
-					}
+				}
 				//--- exceptions ---
-				catch(MalformedURLException event)
-				{
-					System.out.println(event);
-				}
-				catch(IOException event)
-				{
-					System.out.println(event);
-				}
 				catch(Exception event)
 				{
-					System.out.println(event);
+					event.printStackTrace();
 				}
 				
 				///--- pop up box ---
@@ -375,21 +371,23 @@ public class myFrame extends JFrame{
 				data.add(d);
 			}
 			
+			//--- adding distance to table ---
 			for(int i = 1; i<sheet.getRows(); i++)
 			{	
 				Cell cell = sheet.getCell(5,i);
 				postcodes.add(cell.getContents());
 			}
 			
-			for(int i = 0; i<postcodes.size();i++)
+			/*for(int i = 0; i<postcodes.size();i++)
 			{
-				System.out.println(postcodes.get(i));
+				//System.out.println(i + ": " + postcodes.get(i));
 				
 				String currentPostCode = postcodes.get(i);
-				//sM.setPostcodeData(currentPostCode); ---  wont work off campus ---
+				sM.setPostcodeData(currentPostCode); //---  wont work off campus ---
 				latCordsList.add(sM.getLat());
 				longCordsList.add(sM.getLong());
-			}
+			}*/
+			//System.out.println(postcodes.size());
 		}
 		//--- exception ---
 		catch (Exception e) {
@@ -451,11 +449,14 @@ public class myFrame extends JFrame{
 		{
 			//--- calculating distance of 2 postcodes given by user --- | using array, can be changed
 			hD.calculateDistance(latCord,longCord, latCordsList.get(i), longCordsList.get(i));
+			System.out.println(latCordsList.get(i));
+			System.out.println(longCordsList.get(i));
 			cordsDistance.add(hD.getDistance());
 			//double resultDistance = hD.getDistance();
 		}
 		
-		fillData(cordsDistance, 9);
+		System.out.println(cordsDistance);
+		//fillData(cordsDistance, 9);
 		
 		
 		///--- distance dialog box  ---

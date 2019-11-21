@@ -2,10 +2,15 @@ package com.finder.myFinder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.*;
 import java.util.*;
 import org.json.*;
 
@@ -17,14 +22,14 @@ public class searcherMain {
 	private double latCord;
 	
 	//--- getting Postcode Data using API ---
-	public void setPostcodeData(String givenPostcode) throws IOException, MalformedURLException
+	public void setPostcodeData(String givenPostcode)
 	{
 		
 		givenPostcode = replaceSpaces(givenPostcode);
 		
 		String newURL = ("http://sharedweb.cs.bangor.ac.uk/postcodeapi/?postcode=" + givenPostcode);
+		//String newURL = ("http://sharedweb.cs.bangor.ac.uk/postcodeapi/?postcode=LL55 2UT");
 		try {
-			//String newURL = ("http://sharedweb.cs.bangor.ac.uk/postcodeapi/?postcode=" + givenPostcode);
             //--- new URL connection to read data ---
             URL url = new URL(newURL);
             URLConnection urlConnection = url.openConnection();
@@ -55,13 +60,14 @@ public class searcherMain {
             System.out.println("Malformed URL: " + e.getMessage());
         }
         catch (IOException e) {
-            System.out.println("I/O Error: " + e.getMessage() + " In searcherMain");
+            //System.out.println("I/O Error: " + e.getMessage() + " In searcherMain");
+        	e.printStackTrace();
         }
-		catch(Exception e)
+		/*catch(Exception e)
 		{
 			System.out.println(e);
-			System.exit(0);
-		}
+			//System.exit(0);
+		}*/
 
 	}
 	

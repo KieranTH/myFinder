@@ -24,19 +24,19 @@ public HaversineDistance() {
 	
 //--- method for calculating distance by given args ---
  public void calculateDistance(double lat1, double long1, double lat2, double long2) {
- Double latDistance = toRad(lat2-lat1);
- Double lonDistance = toRad(long2-long1);
- Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) + 
- Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
- Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
- Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
- distance = radius * c;
+	 Double latDistance = toRad(lat2-lat1);
+	 Double lonDistance = toRad(long2-long1);
+	 Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) + 
+	 Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
+	 Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+	 Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+	 distance = radius * c;
 
 }
 
  //--- toRad method ---
  private static Double toRad(Double value) {
- return value * Math.PI / 180;
+	 return value * Math.PI / 180;
  }
  
  //--- getter method for distance ---
