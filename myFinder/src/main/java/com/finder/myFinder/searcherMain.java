@@ -20,6 +20,7 @@ public class searcherMain {
 	private String postcode;
 	private double longCord;
 	private double latCord;
+	private int count=0;
 	
 	//--- getting Postcode Data using API ---
 	public void setPostcodeData(String givenPostcode)
@@ -47,8 +48,10 @@ public class searcherMain {
         		longCord = obj.getDouble("longitude");
         		latCord = obj.getDouble("latitude");
         		
+        		count++;
+        		
         		//--- printing results as debugging ---
-        		System.out.println(postcode);
+        		System.out.println("Postcode: " + count + " " + postcode);
         		//System.out.println(longCord);
         		//System.out.println(latCord);
             }
@@ -62,12 +65,13 @@ public class searcherMain {
         catch (IOException e) {
             //System.out.println("I/O Error: " + e.getMessage() + " In searcherMain");
         	e.printStackTrace();
+        	System.exit(0);
         }
-		/*catch(Exception e)
+		catch(Exception e)
 		{
 			System.out.println(e);
-			//System.exit(0);
-		}*/
+			System.exit(0);
+		}
 
 	}
 	

@@ -11,6 +11,10 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.hssf.usermodel.HSSFCell;
 
 import javax.swing.text.*;
 import javax.swing.table.*;
@@ -53,12 +57,22 @@ public class myFrame extends JFrame{
 	private HaversineDistance hD = new HaversineDistance();
 	private searcherMain sM = new searcherMain();
 	
+	
+	private JTable table;
+	private JScrollPane scrollPane;
+	private DefaultTableModel model;
+	private Vector headers;
+	private Vector data;
+	
 	//--- inner components ---
 	private JLabel postCodeLabel;
 	private TableRowSorter sorter;
+	private File file = new File("epraccur 2.xls");
 	
 	//--- excel data ---
 	//public static final String Data = "epraccur.xls";
+	
+	
 	//--- searching data ---
 	public String userGivenPostcode;
 	private List<Double> coords = new ArrayList();
@@ -69,11 +83,13 @@ public class myFrame extends JFrame{
 	private ArrayList<Double> longCordsList = new ArrayList();
 	private ArrayList<Double> cordsDistance = new ArrayList();
 	
+	private int count = 0;
+	
 	
 	//----
 	private Workbook workbook;
 	private Sheet sheet;
-	private File file;
+	//private File file;
 	
 	public static final int FRAME_WIDTH = 800;
 	public static final int FRAME_HEIGHT = 900;
@@ -82,6 +98,8 @@ public class myFrame extends JFrame{
 	
 	public myFrame() {
 		
+		System.out.println("Starting Program....");
+	
 		createSearch();
 		createPanel();
 		
@@ -116,7 +134,7 @@ public class myFrame extends JFrame{
 		buttonPanel.add(SchoolBox);
 		buttonPanel.add(DentistBox);
 		buttonPanel.add(selectAllBox);
-
+		
 		searchResult.add(createTable());
 		searchResult.setMaximumSize(searchResult.getPreferredSize());
 		
@@ -130,7 +148,7 @@ public class myFrame extends JFrame{
 	//--- creating search/distance function ---
 	public void createSearch() {
 		
-		
+		clearTable(postcodes, 9);
 		//--- searcher panel filters ---
 		filters = new ArrayList<RowSorter.SortKey>();
 		
@@ -196,18 +214,77 @@ public class myFrame extends JFrame{
 		distance.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{
-				
 				//--- calculating distance of 2 postcodes given by user --- | using array, can be changed
-				hD.calculateDistance(coords.get(0), coords.get(1), coords.get(2), coords.get(3));
-				double resultDistance = hD.getDistance();
+				//hD.calculateDistance(coords.get(0), coords.get(1), coords.get(2), coords.get(3));
+				//double resultDistance = hD.getDistance();
+				
+				cordsDistance.clear();
+				for(int i = 0; i<postcodes.size(); i++)
+				{
+						hD.calculateDistance(latCord, longCord, latCordsList.get(i), longCordsList.get(i));
+						cordsDistance.add(hD.getDistance());
+				}
+				//System.out.println("CordsDistance array size: " + cordsDistance.size());
 				
 				///--- distance dialog box  ---
-				String distance = "Distance: " + resultDistance;
+				String distance = "Calculating Distance";
 				JDialog jd = new JDialog();
 				JLabel DistanceLabel = new JLabel(distance, SwingConstants.CENTER);
 				jd.add(DistanceLabel);
 				jd.setSize(200, 100);
 		        jd.setVisible(true);
+		        
+		       //--- setting distances ---
+		        clearTable(cordsDistance, 9);
+		        distanceData(cordsDistance, 9);
+		        	
+		       //--- adding count to know when second search is done ---
+		        count++;
+		        
+		       //--- refreshing the table once search/distances are calculated ---
+		        try {
+		        	//--- getting data from sheet ---
+		        	workbook = Workbook.getWorkbook(file);
+		        	sheet = workbook.getSheet(0);
+		        	headers.clear();
+					///--- setting headers into JTable from Sheet ---
+		        	for (int i = 0; i < sheet.getColumns(); i++) {
+		        		Cell cell1 = sheet.getCell(i, 0);
+		        		headers.add(cell1.getContents());
+		        	}
+		        	data.clear();
+		        	//--- adding data to JTable ---
+		        	for (int j = 1; j < sheet.getRows(); j++) {
+		        		Vector d = new Vector();
+		        		for (int i = 0; i < sheet.getColumns(); i++) {
+		        			Cell cell = sheet.getCell(i, j);
+		        			d.add(cell.getContents());
+		        		}
+		        		d.add("\n");
+		        		data.add(d);
+		        	}
+		        }
+		        catch(Exception event)
+		        {
+		        	event.printStackTrace();
+		        }
+		        
+				
+		        //--- setting new refreshed model to table ---
+		        model = new DefaultTableModel(data,headers);
+		        table.setModel(model);
+		       
+		        
+		        //---- debugging ---
+		        System.out.println("Clicks: " + count);
+		        System.out.println("Clearing Distances Column");
+		        
+		        System.out.println("Filling Distances Column");
+
+		        System.out.println("Lat 1 Cord: "+latCord);
+		        System.out.println("Long 1 Cord: "+longCord);
+		        
+		        
 			}
 		});
 		
@@ -344,11 +421,10 @@ public class myFrame extends JFrame{
 	public JScrollPane createTable() {
 				
 		//--- vectors for JTable ---
-		Vector headers = new Vector();
-		Vector data = new Vector();
+		headers = new Vector();
+		data = new Vector();
 		
 		//--- inputting Excel file | if not found, check Project Source ---
-		File file = new File("epraccur.xls");
 		try {
 			//--- getting data from sheet ---
 			workbook = Workbook.getWorkbook(file);
@@ -371,37 +447,63 @@ public class myFrame extends JFrame{
 				data.add(d);
 			}
 			
+			
+			
 			//--- adding distance to table ---
 			for(int i = 1; i<sheet.getRows(); i++)
 			{	
 				Cell cell = sheet.getCell(5,i);
-				postcodes.add(cell.getContents());
+				if(cell.getContents() != null)
+				{
+					postcodes.add(cell.getContents());
+				}
+				
 			}
 			
-			/*for(int i = 0; i<postcodes.size();i++)
+			JDialog jd = new JDialog();
+			JLabel DistanceLabel = new JLabel("Adding Coordinates to Table", SwingConstants.CENTER);
+			jd.add(DistanceLabel);
+			jd.setSize(200, 100);
+	        jd.setVisible(true);
+			
+			for(int i = 0; i<postcodes.size();i++)
 			{
 				//System.out.println(i + ": " + postcodes.get(i));
-				
 				String currentPostCode = postcodes.get(i);
 				sM.setPostcodeData(currentPostCode); //---  wont work off campus ---
 				latCordsList.add(sM.getLat());
 				longCordsList.add(sM.getLong());
-			}*/
+				//System.out.println(latCordsList);
+				//System.out.println(longCordsList);
+				
+				
+			}
+			
+			latData(postcodes,7);
+			longData(postcodes,8);
+			jd.setVisible(false);
+			
+			System.out.println(postcodes.size());
 			//System.out.println(postcodes.size());
+			System.out.println(latCordsList.size());
+			System.out.println(longCordsList.size());
+			//System.out.println(cordsDistance.size());
 		}
 		//--- exception ---
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 		
+		
+		
 		//--- creating JTable Component ---
-		JTable table = new JTable();
+		table = new JTable();
 		//--- adding model from previous loops ---
-		DefaultTableModel model = new DefaultTableModel(data,headers);
+		model = new DefaultTableModel(data,headers);
 		table.setModel(model);
 		table.setAutoCreateRowSorter(true);
-		model = new DefaultTableModel(data, headers);
-		table.setModel(model);
+		//model = new DefaultTableModel(data, headers);
+		//table.setModel(model);
 		
 		//--- scroll pane for data ---
 		JScrollPane scroll = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -465,34 +567,216 @@ public class myFrame extends JFrame{
 	}
 	
 	
-	public void fillData(ArrayList array, int start)
-	{
-		try {
-			int startCell = start;     // Corresponds to Starting Column
-			HSSFWorkbook workbook = null;
-			HSSFSheet sheet = null;
-			HSSFCell cell = null;
-			HSSFRow sheetRow = null;
-			InputStream excelFile = new FileInputStream(file);
+	public void latData(ArrayList<String> array, int start)
+	{	
+		System.out.println("Adding Latitude Data...");
+		try
+		   {
+		       FileInputStream myxls = new FileInputStream("epraccur 2.xls");
+		       HSSFWorkbook myBook = new HSSFWorkbook(myxls);
+		       HSSFSheet worksheet = myBook.getSheetAt(0);
+		       
+		       for (int i = 0; i<postcodes.size(); i++) {
+		   
+		    	   
+		    		 HSSFRow row = worksheet.getRow(i+1);
+		    		 //System.out.println("Row: " + i+1);
 
+		    		//System.out.println("Cell: " + row.getCell(start));
+		    		 if(row.getCell(start) == null)
+		    		 {
+		    			 HSSFCell cell = row.createCell(start);
+		    			 cell.setCellValue(latCordsList.get(i));
+		    		 }
+		    		 else if(row.getCell(start) != null)
+		    		 {
+		    			 HSSFCell cell = row.getCell(start);
+		    			 cell.setCellValue(latCordsList.get(i));
+		    		 }
+		    		 
+		    	}
+		       myxls.close();
+		       FileOutputStream output_file = new FileOutputStream(new File("epraccur 2.xls"));  
+		       //write changes
+		       myBook.write(output_file);
+		       myBook.close();
+		       output_file.close();
+		       System.out.println("Done!");
+		    }
+		    catch(Exception e)
+		    {
+		    	e.printStackTrace();
+		    }
 	    
+	}
+	
+	
+	public void longData(ArrayList<String> array, int start)
+	{	
+		System.out.println("Adding Longitude Data...");
+		try
+		   {
+		       FileInputStream myxls = new FileInputStream("epraccur 2.xls");
+		       HSSFWorkbook myBook = new HSSFWorkbook(myxls);
+		       HSSFSheet worksheet = myBook.getSheetAt(0);
+		       
+		       for (int i = 0; i<postcodes.size(); i++) {
+		   
+		    	   
+		    		 HSSFRow row = worksheet.getRow(i+1);
+		    		 //System.out.println("Row: " + i+1);
+
+		    		//System.out.println("Cell: " + row.getCell(start));
+		    		 if(row.getCell(start) == null)
+		    		 {
+		    			 HSSFCell cell = row.createCell(start);
+		    			 cell.setCellValue(longCordsList.get(i));
+		    		 }
+		    		 else if(row.getCell(start) != null)
+		    		 {
+		    			 HSSFCell cell = row.getCell(start);
+		    			 cell.setCellValue(longCordsList.get(i));
+		    		 }
+		    		 
+		    	}
+		       myxls.close();
+		       FileOutputStream output_file = new FileOutputStream(new File("epraccur 2.xls"));  
+		       //write changes
+		       myBook.write(output_file);
+		       myBook.close();
+		       output_file.close();
+		       System.out.println("Done!");
+		    }
+		    catch(Exception e)
+		    {
+		    	e.printStackTrace();
+		    }
 	    
-			workbook = new HSSFWorkbook(excelFile);
-			sheet = workbook.getSheetAt(0);
-			sheetRow = getRow(sheet, 1);
-			for (int i = 0; i< array.size();i++)
-			{
-				cell = sheetRow.createCell(startCell);
-				//cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-				cell.setCellType(CellType.NUMERIC);
-				cell.setCellValue(((Integer) array.get(i)).doubleValue());
-			}
-		}
-		catch(Exception e)
-		{
-			System.out.println(e);
-		}
+	}
+	
+	
+	
+	public void distanceData(ArrayList<Double> array, int start)
+	{	
+		try
+		   {
+		       FileInputStream myxls = new FileInputStream("epraccur 2.xls");
+		       HSSFWorkbook myBook = new HSSFWorkbook(myxls);
+		       HSSFSheet worksheet = myBook.getSheetAt(0);
+		       
+		       for (int i = 0; i<postcodes.size(); i++) {
+		   
+		    	   
+		    		 HSSFRow row = worksheet.getRow(i+1);
+		    		 System.out.println("Row: " + i+1);
+
+		    		//System.out.println("Cell: " + row.getCell(start));
+		    		 if(row.getCell(start) == null)
+		    		 {
+		    			 HSSFCell cell = row.createCell(start);
+		    			 cell.setCellValue(array.get(i));
+		    		 }
+		    		 
+		    	}
+		       myxls.close();
+		       FileOutputStream output_file = new FileOutputStream(new File("epraccur 2.xls"));  
+		       //write changes
+		       myBook.write(output_file);
+		       myBook.close();
+		       output_file.close();
+		       System.out.println("Distances created");
+		    }
+		    catch(Exception e)
+		    {
+		    	e.printStackTrace();
+		    }
 	    
+	}
+	
+	public void editData(ArrayList<String> array, int start)
+	{	
+		try
+		   {
+		       FileInputStream myxls = new FileInputStream("epraccur 2.xls");
+		       HSSFWorkbook myBook = new HSSFWorkbook(myxls);
+		       HSSFSheet worksheet = myBook.getSheetAt(0);
+		       
+		       for (int i = 0; i<array.size(); i++) {
+		    	  
+		    	   	/*Row row = worksheet.getRow(i+1);
+		    	   	if(row != null)
+		    	   	{
+		    	   		System.out.println(row);
+		    	   		
+		    	   		System.out.println("Row: " + i+1);
+		    	   	}
+		    	   	if(row == null)
+		    	   	{
+		    	   		System.out.println("row is null");
+		    	   	}*/
+		    	   	System.out.println("Changing values to second Postcode");
+		    	   	HSSFRow row = worksheet.getRow(i+1);
+		    		HSSFCell cell = row.getCell(start);	 
+		    		cell.setCellValue(cordsDistance.get(i));
+		    		 
+		    	}
+		       myxls.close();
+		       FileOutputStream output_file = new FileOutputStream(new File("epraccur 2.xls"));  
+		       //write changes
+		       myBook.write(output_file);
+		       myBook.close();
+		       output_file.close();
+		       System.out.println("Table updated");
+		    }
+		    catch(Exception e)
+		    {
+		    	e.printStackTrace();
+		    }
+	    
+	}
+	
+	
+	public void clearTable(ArrayList array, int start) {
+		
+		try
+		   {
+		       FileInputStream myxls = new FileInputStream("epraccur 2.xls");
+		       HSSFWorkbook myBook = new HSSFWorkbook(myxls);
+		       HSSFSheet worksheet = myBook.getSheetAt(0);
+		       
+		       for (int i = 0; i<postcodes.size(); i++) {
+		    	   
+		    	   
+		    	    HSSFRow row = worksheet.getRow(i+1);
+		    	    System.out.println("Row: " + i+1);
+		    	    
+		    	   
+		    		   HSSFCell cell = row.getCell(start);
+		    		   if(cell != null)
+		    		   {
+		    			   row.removeCell(cell);
+		    		   }
+		    		   
+		    		   //cell.setBlank();
+		    	   
+		    	    
+		    	    	
+
+
+		    	}
+		       myxls.close();
+		       FileOutputStream output_file = new FileOutputStream(new File("epraccur 2.xls"));  
+		       //write changes
+		       myBook.write(output_file);
+		       myBook.close();
+		       output_file.close();
+		       System.out.println("Distances cleared");
+		    }
+		    catch(Exception e)
+		    {
+		    	e.printStackTrace();
+		    }
+		
 	}
 
 	/**
