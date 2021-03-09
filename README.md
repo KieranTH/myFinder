@@ -1,4 +1,4 @@
-# myFinder
+# NHS Postcode Finder
 Postcode Finder for Software Hut
 
 Contains all Maven Imports in Pom.xml file.
