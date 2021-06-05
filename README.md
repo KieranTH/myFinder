@@ -103,7 +103,7 @@ This system is used to return relevant NHS Facilities surrounding given Postcode
 
 Kieran Hughes - kieran.hughes2@live.co.uk
 
-Project Link: [https://github.com/KieranTH/HazardAlert](https://github.com/KieranTH/HazardAlert)
+Project Link: [https://github.com/KieranTH/NHSFinder](https://github.com/KieranTH/NHSFinder)
 
 
 
